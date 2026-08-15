@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Prisma generated client
+/generated/prisma
+
+# Editor / AI tooling (local only)
+.agents/
+.claude/
+.windsurf/
+.idea/
+.vscode/
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+npm-debug.log*
+
+# TypeScript build info
+*.tsbuildinfo

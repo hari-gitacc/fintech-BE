@@ -1,0 +1,130 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  TELECALLER
+  CREDIT_OFFICER
+  DISBURSAL_ADMIN
+  SUPER_ADMIN
+}
+
+enum ApplicationStatus {
+  DRAFT
+  PAN_VERIFIED
+  OKYC_COMPLETED
+  BANK_PARSED
+  UNDERWRITING_REVIEW
+  APPROVED
+  REJECTED
+  CONTRACT_SIGNED_OFFLINE
+  DISBURSED
+}
+
+enum DisbursalMode {
+  CASH
+  CHEQUE
+  BANK_TRANSFER
+}
+
+enum RepaymentFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+enum RateType {
+  FLAT
+  REDUCING
+}
+
+model Tenant {
+  id           String            @id @default(uuid())
+  name         String
+  code         String            @unique
+  users        User[]
+  products     LoanProduct[]
+  borrowers    Borrower[]
+  applications LoanApplication[]
+}
+
+model User {
+  id       String @id @default(uuid())
+  tenantId String
+  email    String @unique
+  password String
+  name     String
+  role     Role
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+}
+
+model LoanProduct {
+  id                   String               @id @default(uuid())
+  tenantId             String
+  name                 String
+  targetEmployment     String
+  minAmount            Float
+  maxAmount            Float
+  minTenure            Int
+  maxTenure            Int
+  repaymentFrequency   RepaymentFrequency
+  rateType             RateType
+  baseInterestRate     Float
+  processingFeePercent Float
+  maxAllowedFoir       Float
+  maxAllowedBounces    Int
+  minCreditScore       Int
+  tenant               Tenant               @relation(fields: [tenantId], references: [id])
+  applications         LoanApplication[]
+}
+
+model Borrower {
+  id            String            @id @default(uuid())
+  tenantId      String
+  fullName      String
+  mobile        String
+  encryptedPan  String            @db.Text // AES-256 Encrypted
+  aadhaarMasked String?           // e.g. XXXXXXXX1234
+  dob           String?
+  gender        String?
+  address       Json?
+  photoBase64   String?           @db.Text
+  tenant        Tenant            @relation(fields: [tenantId], references: [id])
+  applications  LoanApplication[]
+}
+
+model LoanApplication {
+  id                    String            @id @default(uuid())
+  tenantId              String
+  borrowerId            String
+  productId             String?
+  status                ApplicationStatus @default(DRAFT)
+  panVerified           Boolean           @default(false)
+  panAadhaarLinked      Boolean           @default(false)
+  panTaxCompliant       Boolean           @default(false)
+  okycVerified          Boolean           @default(false)
+  nameMatchScore        Float?
+  equifaxScore          Int?
+  encryptedEquifaxReport String?          @db.Text // AES-256 Encrypted JSON
+  verifiedMonthlyIncome Float?
+  reconciledMonthlyEmi  Float?
+  calculatedFoir        Float?
+  requestedAmount       Float
+  approvedAmount        Float?
+  tenure                Int?
+  calculatedInstallment Float?
+  pennyDropVerified     Boolean           @default(false)
+  contractPdfUrl        String?
+  signedContractScanUrl String?
+  disbursalMode         DisbursalMode?
+  disbursalVoucherNo    String?
+  disbursalChequeNo     String?
+  disbursalAgentName    String?
+  tenant                Tenant            @relation(fields: [tenantId], references: [id])
+  borrower              Borrower          @relation(fields: [borrowerId], references: [id])
+  product               LoanProduct?      @relation(fields: [productId], references: [id])
+}
