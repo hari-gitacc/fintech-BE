@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: finance-saas-backend
+    runtime: node
+    buildCommand: npm install && npx prisma generate && npm run build
+    startCommand: npm run start:prod
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_ENCRYPTION_KEY
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: TRUID_MERCHANT_ID
+        sync: false
+      - key: TRUID_SECRET_KEY
+        sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false
